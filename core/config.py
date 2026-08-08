@@ -72,6 +72,10 @@ def get_gemini_api_key() -> str:
     return os.getenv("GEMINI_API_KEY", "")
 
 
+def get_gemini_model() -> str:
+    return os.getenv("GEMINI_MODEL", "gemini-flash-latest")
+
+
 # ==============================================================================
 # Retrieval and RAG Configuration
 # ==============================================================================

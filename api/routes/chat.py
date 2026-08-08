@@ -22,7 +22,9 @@ from api.services.openai_service import (
     call_openai_api, is_openai_available, record_openai_failure
 )
 from api.auth import verify_google_token, resolve_role
-from api.context import user_role_var
+from api.context import user_role_var, user_email_var
+from api.services.caller_identity import resolve_caller
+from api.services.context_builder import build_caller_context
 from api.services.library_service import LibraryService
 
 from scrapers import faculty_scraper, staff_scraper
@@ -428,9 +430,15 @@ async def chat_endpoint(request: Request, body: ChatRequest, auth: tuple[str, st
             # published via contextvar so tool dispatch can redact contact
             # details for non-privileged users.
             user_role_var.set(request.state.role)
+            user_email_var.set(request.state.email)
+
+            identity = resolve_caller(request.state.email, request.state.role)
+            now = datetime.now()
 
             system_instruction = SYSTEM_INSTRUCTIONS_TEMPLATE.format(
-                current_day=datetime.now().strftime("%A"),
+                current_date=now.strftime("%d %B %Y"),
+                current_day=now.strftime("%A"),
+                caller_context=build_caller_context(identity),
             )
             
             response_text = None
